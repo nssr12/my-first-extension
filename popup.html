@@ -33,11 +33,29 @@
     .sliderWrap{margin-top:10px}
     .sliderLabel{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:6px}
     input[type="range"]{width:100%}
+    select{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:13px;outline:none;background:#fff;color:var(--text)}
+    .statusBox{border:1px solid var(--border);border-radius:10px;padding:10px;background:#fff}
+    .statusTitle{font-size:12px;color:var(--muted);margin-bottom:6px}
+    .statusValue{font-size:13px;font-weight:700}
+    .statusOk{color:#0f9d58}
+    .statusWarn{color:#b45309}
+    .statusBad{color:#dc2626}
   </style>
 </head>
 <body>
   <h3>ريماب اختصارات الفيديو</h3>
   <div class="muted" id="siteLabel">...</div>
+
+  <div class="card">
+    <div class="statusBox">
+      <div class="statusTitle">حالة الصفحة الحالية</div>
+      <div class="statusValue" id="statusValue">جاري الفحص...</div>
+    </div>
+    <div class="footerRow">
+      <button class="btnGhost" id="checkStatus" type="button">فحص الصفحة</button>
+      <button class="btnGhost" id="manualActivate" type="button">تفعيل يدوي</button>
+    </div>
+  </div>
 
   <div class="card">
     <label class="switch">
@@ -77,6 +95,14 @@
       <input id="to" type="text" placeholder="To مثل: ACTION:SEEK:+5 أو ACTION:TOGGLE_PLAY" />
       <button class="btnGhost" id="capTo" type="button">التقاط</button>
     </div>
+
+    <div class="row">
+      <select id="actionPreset">
+        <option value="">اختر أكشن جاهز</option>
+      </select>
+    </div>
+
+    <div class="muted">شرح هذه الأكشنات موجود أيضًا داخل صفحة الإعدادات في قسم `Settings Guide`.</div>
 
     <div class="footerRow">
       <button class="btn" id="add" type="button">إضافة/تحديث</button>

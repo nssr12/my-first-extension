@@ -4,6 +4,25 @@ let captureTarget = null; // "from" | "to"
 
 const $ = (id) => document.getElementById(id);
 
+const ACTIONS = [
+  { label: "ACTION:TOGGLE_PLAY = تبديل تشغيل/إيقاف", value: "ACTION:TOGGLE_PLAY" },
+  { label: "ACTION:TOGGLE_FULLSCREEN = تبديل ملء الشاشة", value: "ACTION:TOGGLE_FULLSCREEN" },
+  { label: "ACTION:TOGGLE_MUTE = كتم/إلغاء الكتم", value: "ACTION:TOGGLE_MUTE" },
+  { label: "ACTION:VOLUME:+4 = رفع الصوت 4%", value: "ACTION:VOLUME:+4" },
+  { label: "ACTION:VOLUME:-4 = خفض الصوت 4%", value: "ACTION:VOLUME:-4" },
+  { label: "ACTION:SEEK:+1 = تقديم 1 ثانية", value: "ACTION:SEEK:+1" },
+  { label: "ACTION:SEEK:-1 = إرجاع 1 ثانية", value: "ACTION:SEEK:-1" },
+  { label: "ACTION:SEEK:+5 = تقديم 5 ثوانٍ", value: "ACTION:SEEK:+5" },
+  { label: "ACTION:SEEK:-5 = إرجاع 5 ثوانٍ", value: "ACTION:SEEK:-5" },
+  { label: "ACTION:SEEK:+10 = تقديم 10 ثوانٍ", value: "ACTION:SEEK:+10" },
+  { label: "ACTION:SEEK:-10 = إرجاع 10 ثوانٍ", value: "ACTION:SEEK:-10" },
+  { label: "ACTION:SEEK:+30 = تقديم 30 ثانية", value: "ACTION:SEEK:+30" },
+  { label: "ACTION:SEEK:-30 = إرجاع 30 ثانية", value: "ACTION:SEEK:-30" },
+  { label: "ACTION:SPEED:+0.25 = زيادة السرعة 0.25", value: "ACTION:SPEED:+0.25" },
+  { label: "ACTION:SPEED:-0.25 = خفض السرعة 0.25", value: "ACTION:SPEED:-0.25" },
+  { label: "ACTION:TOGGLE_PIP = صورة داخل صورة", value: "ACTION:TOGGLE_PIP" }
+];
+
 function normalizeComboFromEvent(e) {
   const parts = [];
   if (e.ctrlKey) parts.push("Ctrl");
@@ -64,9 +83,32 @@ function renderList() {
   });
 }
 
+function fillActionPreset() {
+  const sel = $("actionPreset");
+  if (!sel) return;
+
+  sel.innerHTML = `<option value="">اختر أكشن جاهز</option>`;
+  for (const action of ACTIONS) {
+    const opt = document.createElement("option");
+    opt.value = action.value;
+    opt.textContent = action.label;
+    sel.appendChild(opt);
+  }
+}
+
 async function getActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   return tab;
+}
+
+function setStatus(kind, text) {
+  const el = $("statusValue");
+  if (!el) return;
+  el.className = "statusValue";
+  if (kind === "ok") el.classList.add("statusOk");
+  if (kind === "warn") el.classList.add("statusWarn");
+  if (kind === "bad") el.classList.add("statusBad");
+  el.textContent = text;
 }
 
 function normalizeHost(host) {
@@ -84,6 +126,59 @@ function hostFromUrl(url) {
     return baseDomain(new URL(url).host);
   } catch {
     return "";
+  }
+}
+
+function isRestrictedUrl(url) {
+  return !url || /^(chrome|edge|about|brave|opera|vivaldi|moz-extension|chrome-extension):/i.test(url);
+}
+
+async function checkPageStatus() {
+  const tab = await getActiveTab();
+  const url = tab?.url || "";
+
+  if (isRestrictedUrl(url)) {
+    setStatus("bad", "هذه الصفحة محمية من المتصفح ولا يمكن تشغيل الإضافة عليها");
+    return;
+  }
+
+  try {
+    const res = await chrome.tabs.sendMessage(tab.id, { type: "GVZ_STATUS" });
+    if (!res?.ok) {
+      setStatus("warn", "الصفحة مفتوحة لكن لم يصلنا رد واضح من الإضافة");
+      return;
+    }
+    if (res.blocked) {
+      setStatus("warn", "الإضافة محظورة على هذا الموقع");
+      return;
+    }
+    if (!res.globalEnabled) {
+      setStatus("warn", "الإضافة متوقفة من خيار التفعيل العام");
+      return;
+    }
+    setStatus("ok", "الإضافة شغالة على هذه الصفحة");
+  } catch {
+    setStatus("bad", "الإضافة غير محقونة في هذه الصفحة. استخدم التفعيل اليدوي");
+  }
+}
+
+async function activateOnCurrentPage() {
+  const tab = await getActiveTab();
+  const url = tab?.url || "";
+
+  if (!tab?.id || isRestrictedUrl(url)) {
+    setStatus("bad", "لا يمكن التفعيل اليدوي على هذه الصفحة");
+    return;
+  }
+
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id, allFrames: true },
+      files: ["content.js"]
+    });
+    await checkPageStatus();
+  } catch {
+    setStatus("bad", "فشل التفعيل اليدوي على هذه الصفحة");
   }
 }
 
@@ -227,9 +322,11 @@ document.addEventListener("mousedown", (e) => {
     ? `الموقع الحالي: ${currentHost}`
     : "يعمل على جميع المواقع التي تحتوي على فيديو";
 
+  fillActionPreset();
   await loadGlobalData();
   await loadOverlayUI();
   await loadBlockedSiteUI();
+  await checkPageStatus();
 
   const od = $("overlayDuration");
   const odValue = $("overlayDurationValue");
@@ -243,9 +340,14 @@ document.addEventListener("mousedown", (e) => {
 
   $("enabled").addEventListener("change", saveGlobalData);
   $("blockCurrentSite").addEventListener("change", saveBlockedSiteState);
+  $("checkStatus").addEventListener("click", checkPageStatus);
+  $("manualActivate").addEventListener("click", activateOnCurrentPage);
 
   $("capFrom").addEventListener("click", () => beginCapture("from"));
   $("capTo").addEventListener("click", () => beginCapture("to"));
+  $("actionPreset").addEventListener("change", () => {
+    if ($("actionPreset").value) $("to").value = $("actionPreset").value;
+  });
 
   $("add").addEventListener("click", () => {
     const from = $("from").value.trim();

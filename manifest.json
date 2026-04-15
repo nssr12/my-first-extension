@@ -5,7 +5,9 @@
   "description": "Remap keyboard/mouse per website + 3x3 wheel zones on any video",
   "permissions": [
     "storage",
-    "tabs"
+    "tabs",
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"

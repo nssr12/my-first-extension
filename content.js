@@ -1,9 +1,14 @@
+if (!window.__GVZ_CONTENT_LOADED__) {
+window.__GVZ_CONTENT_LOADED__ = true;
 let siteRules = { enabled: false, mappings: [] };
 let map = new Map();
 let blockedHosts = [];
+let lastPointer = { x: null, y: null };
+let soundDisplaySettings = { color: "#ffffff", fontSize: 48 };
 
 let lastFsAt = 0;
 let lastMouse2At = 0;
+let suppressContextMenuUntil = 0;
 
 function nowMs() { return Date.now(); }
 
@@ -87,6 +92,25 @@ async function loadBlockedHosts() {
   blockedHosts = Array.isArray(settings.blockedHosts) ? settings.blockedHosts : [];
 }
 
+async function loadSoundDisplaySettings() {
+  const data = await chrome.storage.sync.get({ settings: {} });
+  const settings = data.settings || {};
+  const sound = settings.soundDisplay || soundDisplaySettings;
+  soundDisplaySettings = {
+    color: sound.color || "#ffffff",
+    fontSize: Number(sound.fontSize || 48)
+  };
+
+  if (vzOverlay) {
+    vzOverlay.style.setProperty("--vz-volume-color", soundDisplaySettings.color);
+    vzOverlay.style.setProperty("--vz-volume-size", `${soundDisplaySettings.fontSize}px`);
+  }
+  if (vzVolumeBadge) {
+    vzVolumeBadge.style.setProperty("--vz-volume-color", soundDisplaySettings.color);
+    vzVolumeBadge.style.setProperty("--vz-volume-size", `${soundDisplaySettings.fontSize}px`);
+  }
+}
+
 function isBlockedHost() {
   return blockedHosts.includes(baseDomain(location.host));
 }
@@ -133,12 +157,27 @@ function getZoneNumber(rect, x, y) {
   return row * 3 + col + 1;
 }
 
+function updatePointerFromEvent(e) {
+  if (typeof e.clientX === "number" && typeof e.clientY === "number") {
+    lastPointer = { x: e.clientX, y: e.clientY };
+  }
+}
+
+function getVideoFromPointerPosition() {
+  if (typeof lastPointer.x !== "number" || typeof lastPointer.y !== "number") return null;
+  const el = document.elementFromPoint(lastPointer.x, lastPointer.y);
+  return el?.closest?.("video") || (el?.tagName === "VIDEO" ? el : null);
+}
+
+window.addEventListener("mousemove", updatePointerFromEvent, true);
+
 window.addEventListener("wheel", (e) => {
+  updatePointerFromEvent(e);
   if (isBlockedHost()) return;
   if (!siteRules.enabled) return;
   if (!zoneSettings?.enabled) return;
 
-const video = getVideoUnderPointer(e) || findVideoLoose(e);
+const video = getVideoUnderPointer(e);
 if (video) ensureVideoOverlay(video);
 if (!video) return; // ✅ يمنع الخطأ إذا ما فيه فيديو
 
@@ -190,6 +229,14 @@ function injectOverlayCSS() {
       font:12px/1.2 Arial; max-width:70%;
       opacity:.95;
     }
+    .vzVolume{
+      position:absolute; left:10px; top:10px;
+      color:var(--vz-volume-color, #fff);
+      font:700 var(--vz-volume-size, 48px)/1 Arial;
+      text-shadow:0 2px 10px rgba(0,0,0,.75);
+      pointer-events:none;
+      opacity:.98;
+    }
     .vzHidden{ display:none !important; }
   `;
   document.documentElement.appendChild(style);
@@ -197,6 +244,7 @@ function injectOverlayCSS() {
 
 let vzOverlay = null;
 let vzOverlayVideo = null;
+let vzVolumeBadge = null;
 
 function ensureVideoOverlay(video) {
   if (!video) return;
@@ -205,9 +253,12 @@ function ensureVideoOverlay(video) {
   if (vzOverlay && vzOverlayVideo === video) return;
 
   if (vzOverlay) vzOverlay.remove();
+  if (vzVolumeBadge) vzVolumeBadge.remove();
 
   vzOverlay = document.createElement("div");
   vzOverlay.className = "vzWrap vzHidden";
+  vzOverlay.style.setProperty("--vz-volume-color", soundDisplaySettings.color);
+  vzOverlay.style.setProperty("--vz-volume-size", `${soundDisplaySettings.fontSize}px`);
   vzOverlay.innerHTML = `
     <div class="vzGrid">
       <div class="vzCell"></div><div class="vzCell"></div><div class="vzCell"></div>
@@ -217,11 +268,18 @@ function ensureVideoOverlay(video) {
     <div class="vzHint" id="vzHint">Zones</div>
   `;
 
+  vzVolumeBadge = document.createElement("div");
+  vzVolumeBadge.className = "vzVolume vzHidden";
+  vzVolumeBadge.textContent = "100";
+  vzVolumeBadge.style.setProperty("--vz-volume-color", soundDisplaySettings.color);
+  vzVolumeBadge.style.setProperty("--vz-volume-size", `${soundDisplaySettings.fontSize}px`);
+
   const parent = video.parentElement || video;
   const cs = getComputedStyle(parent);
   if (cs.position === "static") parent.style.position = "relative";
 
   parent.appendChild(vzOverlay);
+  parent.appendChild(vzVolumeBadge);
   vzOverlayVideo = video;
 }
 
@@ -244,6 +302,25 @@ function showOverlay(text) {
 }
 function hideOverlayNow() {
   vzOverlay?.classList.add("vzHidden");
+  vzVolumeBadge?.classList.add("vzHidden");
+}
+
+function showVolumeIndicator(video) {
+  if (!overlaySettings.enabled || !video) return;
+  ensureVideoOverlay(video);
+  if (!vzVolumeBadge || vzOverlayVideo !== video) return;
+
+  const percent = video.muted ? 0 : Math.round((video.volume ?? 1) * 100);
+  vzVolumeBadge.textContent = String(percent);
+  vzVolumeBadge.style.setProperty("--vz-volume-color", soundDisplaySettings.color);
+  vzVolumeBadge.style.setProperty("--vz-volume-size", `${soundDisplaySettings.fontSize}px`);
+  vzVolumeBadge.classList.remove("vzHidden");
+
+  clearTimeout(showVolumeIndicator._t);
+  const ms = Math.max(0, overlaySettings.autoHideMs || 900);
+  showVolumeIndicator._t = setTimeout(() => {
+    vzVolumeBadge?.classList.add("vzHidden");
+  }, ms);
 }
 // -------------------------------------------
 
@@ -288,7 +365,17 @@ async function loadRulesForThisHost() {
 }
 
 
-chrome.runtime.onMessage.addListener((msg) => {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg?.type === "GVZ_STATUS") {
+    sendResponse({
+      ok: true,
+      blocked: isBlockedHost(),
+      globalEnabled: !!siteRules.enabled,
+      hasVideoUnderPointer: !!getVideoFromPointerPosition(),
+      host: baseDomain(location.host)
+    });
+    return true;
+  }
   if (msg?.type === "SITE_RULES_UPDATED") {
     siteRules = msg.siteRules || { enabled: false, mappings: [] };
     buildMap();
@@ -301,6 +388,7 @@ chrome.runtime.onMessage.addListener((msg) => {
   if (msg?.type === "GVZ_RELOAD" || msg?.type === "RELOAD_ZONE_SETTINGS") {
     loadZoneSettings();
     loadBlockedHosts();
+    loadSoundDisplaySettings();
   }
   if (msg?.type === "RELOAD_OVERLAY_SETTINGS") loadOverlaySettings();
   
@@ -310,6 +398,7 @@ loadRulesForThisHost();
 loadZoneSettings(); // ✅ مهم: تشغيل zones بعد refresh مباشرة
 loadOverlaySettings();
 loadBlockedHosts();
+loadSoundDisplaySettings();
 
 function normalizeKeyEvent(e) {
   // نخلي ArrowRight/ArrowLeft يطلع كما هو
@@ -361,7 +450,7 @@ function findVideoFromEvent(e) {
   }
 
   // آخر حل: أول فيديو في الصفحة (لو المشغل واحد)
-  return document.querySelector("video");
+  return null;
 }
 
 function togglePlay(video) {
@@ -382,7 +471,7 @@ function runAction(action, e) {
   if (action === "ACTION:TOGGLE_PLAY") {
     // ✅ Twitch يحتاج loose لأن overlay يغطي الفيديو
     const isTwitch = /(^|\.)twitch\.tv$/i.test(location.host) || /player\.twitch\.tv$/i.test(location.host);
-    const video = isTwitch ? findVideoLoose(e) : findVideoStrict(e);
+    const video = e.__videoUnderPointer || (isTwitch ? findVideoLoose(e) : findVideoStrict(e));
     if (!video) return false;
     togglePlay(video);
     return true;
@@ -418,6 +507,7 @@ if (action === "ACTION:TOGGLE_FULLSCREEN") {
     const video = findVideoLoose(e);
     if (!video) return false;
     video.muted = !video.muted;
+    showVolumeIndicator(video);
     return true;
   }
 
@@ -443,6 +533,7 @@ if (action === "ACTION:TOGGLE_FULLSCREEN") {
     if (!video) return false;
     const delta = n / 100;
     video.volume = Math.max(0, Math.min(1, (video.volume ?? 1) + delta));
+    showVolumeIndicator(video);
     return true;
   }
 
@@ -530,7 +621,7 @@ function findVideoLoose(e) {
     if (v2) return v2;
   }
 
-  return document.querySelector("video");
+  return getVideoFromPointerPosition();
 }
 
 
@@ -548,6 +639,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
     loadZoneSettings();
     loadOverlaySettings();
     loadBlockedHosts();
+    loadSoundDisplaySettings();
   }
   if (changes.globalSiteRules) loadRulesForThisHost();
 });
@@ -566,9 +658,11 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 // ✅ ArrowRight/Left: نمنع الافتراضي ونطبق 5 ثواني
 window.addEventListener("keydown", (e) => {
+  updatePointerFromEvent(e);
   if (isBlockedHost()) return;
   if (!siteRules.enabled) return;
   if (shouldIgnoreKeyBecauseTyping(e)) return;
+  if (!getVideoFromPointerPosition()) return;
 
   const sig = normalizeKeyEvent(e);
   if (!sig) return;
@@ -584,6 +678,7 @@ window.addEventListener("keydown", (e) => {
 }, true);
 
 function handleMouse(e) {
+  updatePointerFromEvent(e);
   if (isBlockedHost()) return;
   if (!siteRules.enabled) return;
 
@@ -605,8 +700,27 @@ function handleMouse(e) {
     lastMouse2At = t;
   }
 
+  // Mouse3 = الزر الأيمن: نفّذ الاختصار وامنع قائمة الزر الأيمن
+  if (sig === "Mouse3") {
+    if (!(e.type === "mousedown" || e.type === "contextmenu")) return;
+
+    const v = getVideoUnderPointerStrict(e);
+    if (!v) return;
+    e.__videoUnderPointer = v;
+
+    if (e.type === "contextmenu") {
+      if (nowMs() < suppressContextMenuUntil) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+      }
+      delete e.__videoUnderPointer;
+      return;
+    }
+  }
+
   // باقي الأزرار (لو عندك): خله mousedown فقط
-  if (sig !== "Mouse1" && sig !== "Mouse2") {
+  if (sig !== "Mouse1" && sig !== "Mouse2" && sig !== "Mouse3") {
     if (e.type !== "mousedown") return;
   }
 
@@ -620,6 +734,9 @@ function handleMouse(e) {
 
 
   const ok = to.startsWith("ACTION:") ? runAction(to, e) : false;
+  if (ok && sig === "Mouse3") {
+    suppressContextMenuUntil = nowMs() + 800;
+  }
   delete e.__videoUnderPointer;
   if (!ok) return;
 
@@ -631,3 +748,5 @@ function handleMouse(e) {
 window.addEventListener("click", handleMouse, true);
 window.addEventListener("auxclick", handleMouse, true);
 window.addEventListener("mousedown", handleMouse, true);
+window.addEventListener("contextmenu", handleMouse, true);
+}

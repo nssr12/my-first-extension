@@ -32,6 +32,7 @@ async function getSettings() {
   settings.zones.wheel ||= { map: {} };
   settings.zones.wheel.map ||= {};
   settings.blockedHosts ||= [];
+  settings.soundDisplay ||= { color: "#ffffff", fontSize: 48 };
   return settings;
 }
 
@@ -140,6 +141,14 @@ function renderBlockedSites(blockedHosts) {
   }
 }
 
+function renderSoundSettings(soundDisplay) {
+  const color = soundDisplay?.color || "#ffffff";
+  const size = Number(soundDisplay?.fontSize || 48);
+  $("soundColor").value = color;
+  $("soundSize").value = String(size);
+  $("soundSizeValue").textContent = `${size}px`;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   const settings = await getSettings();
   const zones = settings.zones;
@@ -154,6 +163,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   renderGrid(zones.wheel.map);
   renderBlockedSites(settings.blockedHosts);
+  renderSoundSettings(settings.soundDisplay);
 
   $("enabled").addEventListener("change", async () => {
     const s = await getSettings();
@@ -170,6 +180,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("enabled").checked = true;
     renderGrid(s.zones.wheel.map);
     renderBlockedSites(s.blockedHosts);
+    renderSoundSettings(s.soundDisplay);
+  });
+
+  $("soundColor").addEventListener("change", async () => {
+    const s = await getSettings();
+    s.soundDisplay ||= { color: "#ffffff", fontSize: 48 };
+    s.soundDisplay.color = $("soundColor").value;
+    await saveSettings(s);
+    renderSoundSettings(s.soundDisplay);
+  });
+
+  $("soundSize").addEventListener("input", () => {
+    $("soundSizeValue").textContent = `${$("soundSize").value}px`;
+  });
+
+  $("soundSize").addEventListener("change", async () => {
+    const s = await getSettings();
+    s.soundDisplay ||= { color: "#ffffff", fontSize: 48 };
+    s.soundDisplay.fontSize = Number($("soundSize").value);
+    await saveSettings(s);
+    renderSoundSettings(s.soundDisplay);
   });
 
   $("modalClose").addEventListener("click", closeModal);
