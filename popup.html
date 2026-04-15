@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Remapper</title>
+  <style>
+    :root{
+      --bg:#ffffff; --card:#f7f7f9; --border:#e5e7eb;
+      --text:#111827; --muted:#6b7280;
+      --btn:#111827; --btnText:#fff;
+      --danger:#ef4444; --dangerText:#fff; --radius:12px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;padding:12px;width:360px;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+    h3{margin:0 0 6px 0;font-size:16px}
+    .muted{color:var(--muted);font-size:12px;margin-bottom:10px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px;margin-bottom:10px}
+    .row{display:flex;gap:8px;align-items:center}
+    .row + .row{margin-top:8px}
+    input[type="text"]{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:13px;outline:none;background:#fff}
+    input[type="text"]:focus{border-color:#c7cbe1}
+    button{border:0;border-radius:10px;padding:10px;cursor:pointer;font-size:13px;white-space:nowrap}
+    .btn{background:var(--btn);color:var(--btnText)}
+    .btnGhost{background:#fff;border:1px solid var(--border);color:var(--text)}
+    .btnDanger{background:var(--danger);color:var(--dangerText)}
+    label.switch{display:flex;gap:8px;align-items:center;font-size:13px}
+    .listHead{display:flex;justify-content:space-between;align-items:center;margin:10px 0 6px;font-size:12px;color:var(--muted)}
+    .rule{display:grid;grid-template-columns:1fr 1fr 40px;gap:8px;align-items:center;margin-top:8px}
+    .delBtn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px}
+    .footerRow{display:flex;gap:8px;margin-top:10px}
+    .footerRow button{flex:1}
+    .sliderWrap{margin-top:10px}
+    .sliderLabel{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input[type="range"]{width:100%}
+  </style>
+</head>
+<body>
+  <h3>ريماب اختصارات الفيديو</h3>
+  <div class="muted" id="siteLabel">...</div>
+
+  <div class="card">
+    <label class="switch">
+      <input type="checkbox" id="enabled">
+      <span>تفعيل الريماب في جميع المواقع</span>
+    </label>
+  </div>
+
+  <div class="card">
+    <label class="switch">
+      <input type="checkbox" id="blockCurrentSite">
+      <span>منع هذا الموقع من استخدام الإضافة</span>
+    </label>
+  </div>
+
+  <div class="card">
+    <div class="listHead">Overlay داخل الفيديو</div>
+
+    <div class="sliderWrap">
+      <div class="sliderLabel">
+        <span>مدة ظهور الـ Overlay</span>
+        <span id="overlayDurationValue">0.9 ثانية</span>
+      </div>
+      <input id="overlayDuration" type="range" min="0" max="3000" step="100" value="900" />
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="listHead">أضف قاعدة (From → To)</div>
+
+    <div class="row">
+      <input id="from" type="text" placeholder="From مثل: ArrowRight أو Mouse1 أو Ctrl+K" />
+      <button class="btnGhost" id="capFrom" type="button">التقاط</button>
+    </div>
+
+    <div class="row">
+      <input id="to" type="text" placeholder="To مثل: ACTION:SEEK:+5 أو ACTION:TOGGLE_PLAY" />
+      <button class="btnGhost" id="capTo" type="button">التقاط</button>
+    </div>
+
+    <div class="footerRow">
+      <button class="btn" id="add" type="button">إضافة/تحديث</button>
+      <button class="btn" id="save" type="button">حفظ الإعدادات</button>
+    </div>
+
+    <div class="listHead">
+      <span>القواعد الحالية</span>
+      <span id="count">0</span>
+    </div>
+
+    <div id="list"></div>
+  </div>
+
+  <div class="footerRow">
+    <button class="btnGhost" id="openOptions" type="button">⚙️ الإعدادات (Zones)</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

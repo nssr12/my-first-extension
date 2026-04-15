@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Global Video Zones - Settings</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">SETTINGS</div>
+      <div class="nav">
+        <div class="navItem active">INTERACTION ZONES</div>
+        <div class="navItem">SETTINGS GUIDE</div>
+      </div>
+      <div class="sideNote">Wheel Up/Down حسب مكان المؤشر على الفيديو.</div>
+    </aside>
+
+    <main class="main">
+      <header class="header">
+        <h1>Interaction Zones (3×3)</h1>
+        <div class="headerRight">
+          <label class="toggle"><input id="enabled" type="checkbox"/> <span>Enabled</span></label>
+          <button id="reset" class="btnGhost">Reset</button>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="hint">اضغط على أي مربع عشان تختار Wheel Up / Wheel Down.<br/>ترقيم المربعات: 1 أعلى يسار → 9 أسفل يمين (للتهيئة فقط).</div>
+
+        <div class="grid" id="grid"></div>
+
+        <div class="legend">
+          <div><b>Wheel Up</b> = سحب للأعلى</div>
+          <div><b>Wheel Down</b> = سحب للأسفل</div>
+        </div>
+      </section>
+
+      <section class="panel guidePanel">
+        <div class="sectionHead">
+          <h2>Settings Guide</h2>
+          <p>هنا أسماء الأوامر الموجودة في الإعدادات ومعنى كل واحد منها.</p>
+        </div>
+
+        <div class="guideList">
+          <div class="guideItem"><span class="guideKey">ACTION:TOGGLE_PLAY</span><span class="guideValue">تبديل تشغيل الفيديو أو إيقافه مؤقتًا</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:TOGGLE_FULLSCREEN</span><span class="guideValue">تبديل تكبير الشاشة إلى وضع ملء الشاشة أو الرجوع</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:TOGGLE_MUTE</span><span class="guideValue">كتم الصوت أو إلغاء الكتم</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:VOLUME:+4</span><span class="guideValue">رفع مستوى الصوت بنسبة 4%</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:VOLUME:-4</span><span class="guideValue">خفض مستوى الصوت بنسبة 4%</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:SEEK:+1</span><span class="guideValue">تقديم الفيديو ثانية واحدة</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:SEEK:-1</span><span class="guideValue">إرجاع الفيديو ثانية واحدة</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:SEEK:+5</span><span class="guideValue">تقديم الفيديو 5 ثوانٍ</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:SEEK:-5</span><span class="guideValue">إرجاع الفيديو 5 ثوانٍ</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:SEEK:+10</span><span class="guideValue">تقديم الفيديو 10 ثوانٍ</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:SEEK:-10</span><span class="guideValue">إرجاع الفيديو 10 ثوانٍ</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:SEEK:+30</span><span class="guideValue">تقديم الفيديو 30 ثانية</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:SEEK:-30</span><span class="guideValue">إرجاع الفيديو 30 ثانية</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:SPEED:+0.25</span><span class="guideValue">زيادة سرعة تشغيل الفيديو بمقدار 0.25</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:SPEED:-0.25</span><span class="guideValue">خفض سرعة تشغيل الفيديو بمقدار 0.25</span></div>
+          <div class="guideItem"><span class="guideKey">ACTION:TOGGLE_PIP</span><span class="guideValue">تفعيل وضع صورة داخل صورة أو إلغاؤه</span></div>
+        </div>
+      </section>
+
+      <section class="panel guidePanel">
+        <div class="sectionHead">
+          <h2>Blocked Sites</h2>
+          <p>هذه المواقع لن تعمل عليها الإضافة حتى لو كانت مفعلة بشكل عام.</p>
+        </div>
+
+        <div class="blockedList" id="blockedList"></div>
+        <div class="emptyState" id="blockedEmpty">لا توجد مواقع ممنوعة حاليًا.</div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div class="modalOverlay" id="modalOverlay" hidden>
+    <div class="modal">
+      <div class="modalHeader">
+        <div id="modalTitle" class="modalTitle">Zone</div>
+        <button id="modalClose" class="iconBtn">✕</button>
+      </div>
+
+      <div class="form">
+        <label>Wheel Up
+          <select id="wheelUp"></select>
+        </label>
+        <label>Wheel Down
+          <select id="wheelDown"></select>
+        </label>
+      </div>
+
+      <div class="modalActions">
+        <button id="modalCancel" class="btnGhost">Cancel</button>
+        <button id="modalSave" class="btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

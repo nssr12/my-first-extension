@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Site Shortcut Remapper",
+  "version": "2.0.0",
+  "description": "Remap keyboard/mouse per website + 3x3 wheel zones on any video",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_title": "Remapper",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "options_page": "options.html"
+}
