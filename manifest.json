@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Site Shortcut Remapper",
+  "name": "Video Interaction Zones",
   "version": "2.0.0",
-  "description": "Remap keyboard/mouse per website + 3x3 wheel zones on any video",
+  "description": "Control HTML5 videos on almost any site with keyboard and mouse remapping, 3x3 interaction zones, overlay hints, and per-site blocking.",
   "permissions": [
     "storage",
     "tabs",
@@ -13,7 +13,7 @@
     "<all_urls>"
   ],
   "action": {
-    "default_title": "Remapper",
+    "default_title": "Video Interaction Zones",
     "default_popup": "popup.html"
   },
   "content_scripts": [
