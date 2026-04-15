@@ -11,83 +11,105 @@
     <aside class="sidebar">
       <div class="brand">SETTINGS</div>
       <div class="nav">
-        <div class="navItem active">INTERACTION ZONES</div>
-        <div class="navItem">SETTINGS GUIDE</div>
+        <button class="navItem active" data-section="zonesSection">INTERACTION ZONES</button>
+        <button class="navItem" data-section="appearanceSection">GRID APPEARANCE</button>
+        <button class="navItem" data-section="volumeSection">VOLUME INDICATOR</button>
+        <button class="navItem" data-section="blockedSection">BLOCKED SITES</button>
+        <button class="navItem" data-section="guideSection">SETTINGS GUIDE</button>
       </div>
       <div class="sideNote">Wheel Up/Down حسب مكان المؤشر على الفيديو.</div>
     </aside>
 
     <main class="main">
-      <header class="header">
+      <header class="header sectionPage active" id="zonesSection">
         <h1>Interaction Zones (3×3)</h1>
         <div class="headerRight">
           <label class="toggle"><input id="enabled" type="checkbox"/> <span>Enabled</span></label>
+          <label class="toggle"><input id="fullscreenOnly" type="checkbox"/> <span>FullscreenOnly</span></label>
           <button id="reset" class="btnGhost">Reset</button>
         </div>
+        <section class="panel">
+          <div class="hint">اضغط على أي مربع عشان تختار Wheel Up / Wheel Down.<br/>ترقيم المربعات: 1 أعلى يسار → 9 أسفل يمين (للتهيئة فقط).<br/>إذا فعّلت <b>FullscreenOnly</b> فلن تعمل أوامر المربعات إلا أثناء ملء الشاشة.</div>
+
+          <div class="grid" id="grid"></div>
+
+          <div class="legend">
+            <div><b>Wheel Up</b> = سحب للأعلى</div>
+            <div><b>Wheel Down</b> = سحب للأسفل</div>
+          </div>
+        </section>
       </header>
 
-      <section class="panel">
-        <div class="hint">اضغط على أي مربع عشان تختار Wheel Up / Wheel Down.<br/>ترقيم المربعات: 1 أعلى يسار → 9 أسفل يمين (للتهيئة فقط).</div>
-
-        <div class="grid" id="grid"></div>
-
-        <div class="legend">
-          <div><b>Wheel Up</b> = سحب للأعلى</div>
-          <div><b>Wheel Down</b> = سحب للأسفل</div>
-        </div>
-      </section>
-
-      <section class="panel guidePanel">
+      <section class="sectionPage" id="appearanceSection" hidden>
         <div class="sectionHead">
-          <h2>Settings Guide</h2>
-          <p>هنا أسماء الأوامر الموجودة في الإعدادات ومعنى كل واحد منها.</p>
+          <h1>Grid Appearance</h1>
+          <p>تخصيص شكل صفحة المربعات والشبكة الظاهرة في الإعدادات.</p>
         </div>
 
-        <div class="guideList">
-          <div class="guideItem"><span class="guideKey">ACTION:TOGGLE_PLAY</span><span class="guideValue">تبديل تشغيل الفيديو أو إيقافه مؤقتًا</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:TOGGLE_FULLSCREEN</span><span class="guideValue">تبديل تكبير الشاشة إلى وضع ملء الشاشة أو الرجوع</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:TOGGLE_MUTE</span><span class="guideValue">كتم الصوت أو إلغاء الكتم</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:VOLUME:+4</span><span class="guideValue">رفع مستوى الصوت بنسبة 4%</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:VOLUME:-4</span><span class="guideValue">خفض مستوى الصوت بنسبة 4%</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:SEEK:+1</span><span class="guideValue">تقديم الفيديو ثانية واحدة</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:SEEK:-1</span><span class="guideValue">إرجاع الفيديو ثانية واحدة</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:SEEK:+5</span><span class="guideValue">تقديم الفيديو 5 ثوانٍ</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:SEEK:-5</span><span class="guideValue">إرجاع الفيديو 5 ثوانٍ</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:SEEK:+10</span><span class="guideValue">تقديم الفيديو 10 ثوانٍ</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:SEEK:-10</span><span class="guideValue">إرجاع الفيديو 10 ثوانٍ</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:SEEK:+30</span><span class="guideValue">تقديم الفيديو 30 ثانية</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:SEEK:-30</span><span class="guideValue">إرجاع الفيديو 30 ثانية</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:SPEED:+0.25</span><span class="guideValue">زيادة سرعة تشغيل الفيديو بمقدار 0.25</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:SPEED:-0.25</span><span class="guideValue">خفض سرعة تشغيل الفيديو بمقدار 0.25</span></div>
-          <div class="guideItem"><span class="guideKey">ACTION:TOGGLE_PIP</span><span class="guideValue">تفعيل وضع صورة داخل صورة أو إلغاؤه</span></div>
-        </div>
+        <section class="panel">
+          <div class="hint">قسم مخصص لتنسيق شكل صفحة الإعدادات لاحقًا مثل ألوان الشبكة أو شكل البطاقات.</div>
+        </section>
       </section>
 
-      <section class="panel guidePanel">
+      <section class="sectionPage" id="volumeSection" hidden>
+        <div class="sectionHead">
+          <h1>Volume Indicator</h1>
+          <p>إعدادات رقم الصوت الذي يظهر أعلى يسار الفيديو عند تغيير مستوى الصوت.</p>
+        </div>
+
+        <section class="panel">
+          <div class="soundSettings">
+            <label>لون الرقم
+              <input id="soundColor" type="color" />
+            </label>
+            <label>حجم الرقم
+              <input id="soundSize" type="range" min="20" max="96" step="2" />
+              <span class="rangeValue" id="soundSizeValue">48px</span>
+            </label>
+          </div>
+        </section>
+      </section>
+
+      <section class="sectionPage" id="blockedSection" hidden>
         <div class="sectionHead">
           <h2>Blocked Sites</h2>
           <p>هذه المواقع لن تعمل عليها الإضافة حتى لو كانت مفعلة بشكل عام.</p>
         </div>
 
-        <div class="blockedList" id="blockedList"></div>
-        <div class="emptyState" id="blockedEmpty">لا توجد مواقع ممنوعة حاليًا.</div>
+        <section class="panel">
+          <div class="blockedList" id="blockedList"></div>
+          <div class="emptyState" id="blockedEmpty">لا توجد مواقع ممنوعة حاليًا.</div>
+        </section>
       </section>
 
-      <section class="panel guidePanel">
+      <section class="sectionPage" id="guideSection" hidden>
         <div class="sectionHead">
-          <h2>Volume Indicator</h2>
-          <p>إعدادات رقم الصوت الذي يظهر أعلى يسار الفيديو عند تغيير مستوى الصوت.</p>
+          <h2>Settings Guide</h2>
+          <p>هنا أسماء الأوامر الموجودة في الإعدادات ومعنى كل واحد منها.</p>
         </div>
 
-        <div class="soundSettings">
-          <label>لون الرقم
-            <input id="soundColor" type="color" />
-          </label>
-          <label>حجم الرقم
-            <input id="soundSize" type="range" min="20" max="96" step="2" />
-            <span class="rangeValue" id="soundSizeValue">48px</span>
-          </label>
-        </div>
+        <section class="panel guidePanel">
+          <div class="guideList">
+            <div class="guideItem"><span class="guideKey">ACTION:TOGGLE_PLAY</span><span class="guideValue">تبديل تشغيل الفيديو أو إيقافه مؤقتًا</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:TOGGLE_FULLSCREEN</span><span class="guideValue">تبديل تكبير الشاشة إلى وضع ملء الشاشة أو الرجوع</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:TOGGLE_MUTE</span><span class="guideValue">كتم الصوت أو إلغاء الكتم</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:VOLUME:+4</span><span class="guideValue">رفع مستوى الصوت بنسبة 4%</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:VOLUME:-4</span><span class="guideValue">خفض مستوى الصوت بنسبة 4%</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:SEEK:+1</span><span class="guideValue">تقديم الفيديو ثانية واحدة</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:SEEK:-1</span><span class="guideValue">إرجاع الفيديو ثانية واحدة</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:SEEK:+5</span><span class="guideValue">تقديم الفيديو 5 ثوانٍ</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:SEEK:-5</span><span class="guideValue">إرجاع الفيديو 5 ثوانٍ</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:SEEK:+10</span><span class="guideValue">تقديم الفيديو 10 ثوانٍ</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:SEEK:-10</span><span class="guideValue">إرجاع الفيديو 10 ثوانٍ</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:SEEK:+30</span><span class="guideValue">تقديم الفيديو 30 ثانية</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:SEEK:-30</span><span class="guideValue">إرجاع الفيديو 30 ثانية</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:SEEK:+0.5</span><span class="guideValue">مثال على قيمة مخصصة لتقديم الفيديو نصف ثانية</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:SEEK:-0.5</span><span class="guideValue">مثال على قيمة مخصصة لإرجاع الفيديو نصف ثانية</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:SPEED:+0.25</span><span class="guideValue">زيادة سرعة تشغيل الفيديو بمقدار 0.25</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:SPEED:-0.25</span><span class="guideValue">خفض سرعة تشغيل الفيديو بمقدار 0.25</span></div>
+            <div class="guideItem"><span class="guideKey">ACTION:TOGGLE_PIP</span><span class="guideValue">تفعيل وضع صورة داخل صورة أو إلغاؤه</span></div>
+          </div>
+        </section>
       </section>
     </main>
   </div>
@@ -100,18 +122,69 @@
         <button id="modalClose" class="iconBtn">✕</button>
       </div>
 
-      <div class="form">
-        <label>Wheel Up
-          <select id="wheelUp"></select>
-        </label>
-        <label>Wheel Down
-          <select id="wheelDown"></select>
-        </label>
+      <div class="zoneEditorHint">أضف أكثر من أكشن داخل نفس المربع، ثم حدّد لكل أكشن زر التنفيذ المناسب.</div>
+
+      <div class="zoneActionsList" id="zoneActionsList"></div>
+
+      <div class="zoneEditorTools">
+        <button id="addActionBtn" class="btnGhost">+ ADD ACTION</button>
       </div>
 
       <div class="modalActions">
         <button id="modalCancel" class="btnGhost">Cancel</button>
         <button id="modalSave" class="btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modalOverlay" id="actionModalOverlay" hidden>
+    <div class="modal smallModal">
+      <div class="modalHeader">
+        <div class="modalTitle" id="actionModalTitle">Add Action</div>
+        <button id="actionModalClose" class="iconBtn">✕</button>
+      </div>
+
+      <div class="form">
+        <label>Action
+          <select id="actionType"></select>
+        </label>
+
+        <label id="actionUnitWrap" hidden>Unit
+          <select id="actionUnit">
+            <option value="second">Second</option>
+            <option value="frame">Frame</option>
+            <option value="percent">%</option>
+          </select>
+        </label>
+
+        <label id="actionValueWrap" hidden>Value
+          <input id="actionValue" type="text" placeholder="0.5" />
+        </label>
+      </div>
+
+      <div class="modalActions">
+        <button id="actionModalDelete" class="btnGhost" hidden>Delete</button>
+        <button id="actionModalCancel" class="btnGhost">Cancel</button>
+        <button id="actionModalSave" class="btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modalOverlay" id="keyCaptureOverlay" hidden>
+    <div class="modal smallModal">
+      <div class="modalHeader">
+        <div class="modalTitle">Set Key</div>
+        <button id="keyCaptureClose" class="iconBtn">✕</button>
+      </div>
+
+      <div class="captureBox">
+        <div class="captureTitle">Place the mouse cursor here and use MOUSE WHEEL.</div>
+        <div class="captureMeta">Wheel Up أو Wheel Down</div>
+        <div class="captureValue" id="captureValue">...</div>
+      </div>
+
+      <div class="modalActions">
+        <button id="keyCaptureCancel" class="btnGhost">Cancel</button>
       </div>
     </div>
   </div>

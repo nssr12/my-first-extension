@@ -13,10 +13,13 @@ body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text
 .sidebar{background:#0b0d12;border-right:1px solid var(--border);padding:16px 12px}
 .brand{font-weight:700;letter-spacing:.5px;margin-bottom:14px;opacity:.9}
 .nav{display:flex;flex-direction:column;gap:6px}
-.navItem{padding:10px 10px;border-radius:10px;border:1px solid var(--accent);color:var(--accent)}
+.navItem{padding:10px 10px;border-radius:10px;border:1px solid var(--border);color:var(--text);background:transparent;text-align:left;cursor:pointer}
+.navItem.active{border-color:var(--accent);color:var(--accent)}
 .sideNote{margin-top:12px;font-size:12px;opacity:.75;line-height:1.4}
 .main{padding:18px}
 .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.sectionPage{display:none}
+.sectionPage.active{display:block}
 h1{margin:0;font-size:22px}
 h2{margin:0;font-size:18px}
 .headerRight{display:flex;gap:10px;align-items:center}
@@ -52,12 +55,32 @@ h2{margin:0;font-size:18px}
 
 .modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999}
 .modal{width:min(520px,92vw);background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px}
+.smallModal{width:min(440px,92vw)}
 .modalHeader{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .modalTitle{font-weight:700}
 .form{display:grid;gap:12px;margin:10px 0 14px}
 label{display:grid;gap:6px;font-size:12px;opacity:.9}
-select{padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--panel2);color:var(--text)}
+select,input[type="text"]{padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--panel2);color:var(--text)}
+input[type="text"]::placeholder{color:var(--muted)}
 .modalActions{display:flex;justify-content:flex-end;gap:10px}
+.zoneEditorHint{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+.zoneEditorTools{margin-top:12px}
+.zoneActionsList{display:grid;gap:10px;min-height:80px}
+.zoneActionCard{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel2)}
+.zoneActionCard.editable{cursor:pointer}
+.zoneActionCard.editable:hover{outline:2px solid rgba(255,59,59,.25)}
+.zoneActionMain{display:grid;gap:4px}
+.zoneActionTitle{font-size:14px;font-weight:700}
+.zoneActionMeta{font-size:12px;color:var(--muted)}
+.zoneActionKey{min-width:120px}
+.zoneActionDelete{padding:8px 10px}
+.emptyZoneActions{padding:16px;border:1px dashed var(--border);border-radius:12px;color:var(--muted);text-align:center}
+.keyBadge{padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:#1f2430;color:var(--text);font-size:12px;cursor:pointer}
+.keyBadge.empty{background:transparent;color:var(--accent);border-color:var(--accent)}
+.captureBox{display:grid;gap:14px;padding:24px;border-radius:14px;background:#f54739;color:#fff;text-align:center}
+.captureTitle{font-size:18px;font-weight:700;line-height:1.7}
+.captureMeta{font-size:14px;opacity:.95}
+.captureValue{font-size:24px;font-weight:700;letter-spacing:.5px}
 
 
 /* Ensure hidden attribute works (otherwise modal blocks page) */
@@ -73,4 +96,5 @@ select{padding:10px;border-radius:10px;border:1px solid var(--border);background
   .grid{grid-template-columns:1fr}
   .legend{flex-direction:column;gap:8px}
   .guideItem{grid-template-columns:1fr}
+  .zoneActionCard{grid-template-columns:1fr}
 }

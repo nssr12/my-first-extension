@@ -38,6 +38,7 @@ async function ensureZonesDefaults() {
   if (!settings.zones) {
     settings.zones = {
       enabled: true,
+      fullscreenOnly: false,
       autoHideMs: 900,
       wheel: {
         preset: "grid3x3",
@@ -51,6 +52,12 @@ async function ensureZonesDefaults() {
   const enabled = settings.zones.enabled !== false;
   if (settings.zones.enabled !== enabled) {
     settings.zones.enabled = enabled;
+    changed = true;
+  }
+
+  const fullscreenOnly = settings.zones.fullscreenOnly === true;
+  if (settings.zones.fullscreenOnly !== fullscreenOnly) {
+    settings.zones.fullscreenOnly = fullscreenOnly;
     changed = true;
   }
 
@@ -133,6 +140,7 @@ async function loadZoneSettings() {
   zoneSettings = zones || zoneSettings;
 
   zoneSettings.enabled = zoneSettings.enabled !== false; // default true
+  zoneSettings.fullscreenOnly = zoneSettings.fullscreenOnly === true;
   zoneSettings.wheel ||= { map: {} };
   zoneSettings.wheel.map ||= {};
 }
@@ -195,6 +203,11 @@ function getVideoFromPointerPosition() {
   return findVideoAtPoint(lastPointer.x, lastPointer.y);
 }
 
+function normalizeMappedActions(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  return value ? [value] : [];
+}
+
 window.addEventListener("mousemove", updatePointerFromEvent, true);
 
 window.addEventListener("wheel", (e) => {
@@ -202,6 +215,7 @@ window.addEventListener("wheel", (e) => {
   if (isBlockedHost()) return;
   if (!siteRules.enabled) return;
   if (!zoneSettings?.enabled) return;
+  if (zoneSettings?.fullscreenOnly && !document.fullscreenElement) return;
 
 const video = getVideoUnderPointer(e);
 if (video) ensureVideoOverlay(video);
@@ -215,11 +229,14 @@ if (!video) return; // ✅ يمنع الخطأ إذا ما فيه فيديو
   if (!entry) return;
 
   const dir = e.deltaY < 0 ? "up" : "down";
-  const action = entry[dir];
-  if (!action) return;
-  showOverlay(`Zone ${zone} • ${dir.toUpperCase()} → ${action}`);
+  const actions = normalizeMappedActions(entry[dir]);
+  if (!actions.length) return;
+  showOverlay(`Zone ${zone} • ${dir.toUpperCase()} → ${actions.join(" + ")}`);
 
-  const ok = runAction(action, e);
+  let ok = false;
+  for (const action of actions) {
+    ok = runAction(action, e) || ok;
+  }
   if (!ok) return;
 
   e.preventDefault();
@@ -575,6 +592,8 @@ if (action === "ACTION:TOGGLE_FULLSCREEN") {
 
 function pickFullscreenContainer(video) {
   if (!video) return null;
+  const videoRect = video.getBoundingClientRect();
+  const videoArea = Math.max(1, videoRect.width * videoRect.height);
 
   // جرّب نلقى أقرب حاوية “تشبه مشغل” (عادة تحتوي أزرار/controls overlay)
   const candidates = [];
@@ -593,9 +612,27 @@ function pickFullscreenContainer(video) {
       const role = (el.getAttribute?.("role") || "");
       const hasButtons = !!el.querySelector?.("button, [role='button'], input[type='range']");
       const looksPlayer = /player|video|controls|overlay|container/i.test(cls + " " + role);
-      const score = (hasButtons ? 3 : 0) + (looksPlayer ? 2 : 0) + (el === video ? 0 : 1);
+      const rect = el.getBoundingClientRect?.();
+      if (!rect || rect.width <= 0 || rect.height <= 0) return null;
+
+      const areaRatio = (rect.width * rect.height) / videoArea;
+      const containsVideoCenter =
+        rect.left <= videoRect.left + (videoRect.width / 2) &&
+        rect.right >= videoRect.left + (videoRect.width / 2) &&
+        rect.top <= videoRect.top + (videoRect.height / 2) &&
+        rect.bottom >= videoRect.top + (videoRect.height / 2);
+
+      if (!containsVideoCenter) return null;
+      if (areaRatio > 3.5) return null; // يمنع body / page wrappers
+
+      const score =
+        (hasButtons ? 3 : 0) +
+        (looksPlayer ? 2 : 0) +
+        (el === video ? 0 : 1) +
+        Math.max(0, 2 - Math.abs(areaRatio - 1.15));
       return { el, score };
     })
+    .filter(Boolean)
     .sort((a, b) => b.score - a.score);
 
   // أفضل خيار: أعلى سكور، وإلا استخدم parent للفيديو
@@ -613,9 +650,10 @@ function toggleFullscreen(video) {
     return;
   }
 
-  const req = v.requestFullscreen || v.webkitRequestFullscreen;
+  const container = pickFullscreenContainer(v);
+  const req = container?.requestFullscreen || container?.webkitRequestFullscreen;
   if (req) {
-    try { req.call(v); } catch {}
+    try { req.call(container); } catch {}
   }
 }
 
