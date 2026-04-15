@@ -137,11 +137,38 @@ async function loadZoneSettings() {
   zoneSettings.wheel.map ||= {};
 }
 
+function findVideoAtPoint(x, y) {
+  if (typeof x !== "number" || typeof y !== "number") return null;
+
+  const stack = typeof document.elementsFromPoint === "function"
+    ? document.elementsFromPoint(x, y)
+    : [document.elementFromPoint(x, y)].filter(Boolean);
+
+  for (const el of stack) {
+    if (!el) continue;
+    if (el.tagName === "VIDEO") return el;
+
+    const closestVideo = el.closest?.("video");
+    if (closestVideo) return closestVideo;
+
+    const descendantVideos = el.querySelectorAll?.("video");
+    if (!descendantVideos?.length) continue;
+
+    for (const video of descendantVideos) {
+      const rect = video.getBoundingClientRect?.();
+      if (!rect) continue;
+      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        return video;
+      }
+    }
+  }
+
+  return null;
+}
 
 function getVideoUnderPointer(e) {
   if (typeof e.clientX === "number" && typeof e.clientY === "number") {
-    const el = document.elementFromPoint(e.clientX, e.clientY);
-    const v = el?.closest?.("video") || (el?.tagName === "VIDEO" ? el : null);
+    const v = findVideoAtPoint(e.clientX, e.clientY);
     if (v) return v;
   }
   return null;
@@ -165,8 +192,7 @@ function updatePointerFromEvent(e) {
 
 function getVideoFromPointerPosition() {
   if (typeof lastPointer.x !== "number" || typeof lastPointer.y !== "number") return null;
-  const el = document.elementFromPoint(lastPointer.x, lastPointer.y);
-  return el?.closest?.("video") || (el?.tagName === "VIDEO" ? el : null);
+  return findVideoAtPoint(lastPointer.x, lastPointer.y);
 }
 
 window.addEventListener("mousemove", updatePointerFromEvent, true);
@@ -425,8 +451,7 @@ function normalizeMouseEvent(e) {
 }
 function getVideoUnderPointerStrict(e) {
   if (typeof e.clientX !== "number" || typeof e.clientY !== "number") return null;
-  const el = document.elementFromPoint(e.clientX, e.clientY);
-  const v = el?.closest?.("video") || (el?.tagName === "VIDEO" ? el : null);
+  const v = findVideoAtPoint(e.clientX, e.clientY);
   return v || null;
 }
 
@@ -444,8 +469,7 @@ function findVideoFromEvent(e) {
 
   // fallback: نطلع العنصر تحت إحداثيات الماوس
   if (typeof e.clientX === "number" && typeof e.clientY === "number") {
-    const el = document.elementFromPoint(e.clientX, e.clientY);
-    const v2 = el?.closest?.("video");
+    const v2 = findVideoAtPoint(e.clientX, e.clientY);
     if (v2) return v2;
   }
 
@@ -469,9 +493,7 @@ function seek(video, deltaSec) {
 function runAction(action, e) {
   // Play/Pause: فقط فيديو نفسه
   if (action === "ACTION:TOGGLE_PLAY") {
-    // ✅ Twitch يحتاج loose لأن overlay يغطي الفيديو
-    const isTwitch = /(^|\.)twitch\.tv$/i.test(location.host) || /player\.twitch\.tv$/i.test(location.host);
-    const video = e.__videoUnderPointer || (isTwitch ? findVideoLoose(e) : findVideoStrict(e));
+    const video = e.__videoUnderPointer || findVideoLoose(e);
     if (!video) return false;
     togglePlay(video);
     return true;
@@ -582,7 +604,7 @@ function pickFullscreenContainer(video) {
 
 function toggleFullscreen(video) {
   const doc = document;
-  const v = video || document.querySelector("video");
+  const v = video;
   if (!v) return;
 
   // خروج
@@ -591,12 +613,9 @@ function toggleFullscreen(video) {
     return;
   }
 
-  // دخول: اختَر حاوية المشغل بدل الفيديو
-  const container = pickFullscreenContainer(v);
-
-  const req = container.requestFullscreen || container.webkitRequestFullscreen;
+  const req = v.requestFullscreen || v.webkitRequestFullscreen;
   if (req) {
-    try { req.call(container); } catch {}
+    try { req.call(v); } catch {}
   }
 }
 
@@ -616,8 +635,7 @@ function findVideoLoose(e) {
 
   // الأهم: خذ العنصر تحت المؤشر (غالباً الفيديو يكون تحته)
   if (typeof e.clientX === "number" && typeof e.clientY === "number") {
-    const el = document.elementFromPoint(e.clientX, e.clientY);
-    const v2 = el?.closest?.("video") || (el?.tagName === "VIDEO" ? el : null);
+    const v2 = findVideoAtPoint(e.clientX, e.clientY);
     if (v2) return v2;
   }
 
