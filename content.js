@@ -472,6 +472,21 @@ function getVideoUnderPointerStrict(e) {
   return v || null;
 }
 
+function shouldLetNativeLinkHandlingRun(e, video) {
+  const target = e.target;
+  if (!target?.closest) return false;
+
+  const linkLike = target.closest("a[href], [role='link']");
+  if (!linkLike) return false;
+
+  if (!video) return true;
+
+  if (linkLike === video) return false;
+  if (video.contains?.(linkLike)) return false;
+
+  return true;
+}
+
 function findVideoFromEvent(e) {
   // نبحث عن فيديو تحت المؤشر أو داخل العنصر المضغوط
   const t = e.target;
@@ -762,6 +777,7 @@ function handleMouse(e) {
 
     const v = getVideoUnderPointerStrict(e);
     if (!v) return;
+    if (shouldLetNativeLinkHandlingRun(e, v)) return;
     e.__videoUnderPointer = v;
 
     if (e.type === "contextmenu") {
@@ -781,11 +797,11 @@ function handleMouse(e) {
   }
 
   if (sig === "Mouse2") {
-  const v = getVideoUnderPointerStrict(e);
-  if (!v) return;            // خارج الفيديو = لا تسوي شي
-  // نخلي runAction يستخدم هذا الفيديو بدل fallback
-  e.__videoUnderPointer = v; // نخزن مؤقتًا (اختياري)
-}
+    const v = getVideoUnderPointerStrict(e);
+    if (!v) return; // خارج الفيديو = لا تسوي شي
+    if (shouldLetNativeLinkHandlingRun(e, v)) return;
+    e.__videoUnderPointer = v;
+  }
 
 
 

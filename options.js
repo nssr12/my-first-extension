@@ -186,6 +186,12 @@ async function getSettings() {
   const settings = data.settings || {};
   settings.blockedHosts ||= [];
   settings.soundDisplay ||= { color: "#ffffff", fontSize: 48 };
+  settings.gridAppearance ||= {
+    cellBg: "#10131a",
+    cellBorder: "#2a2f3a",
+    numberColor: "#a3a3a3",
+    radius: 12
+  };
   ensureZoneActions(settings);
   return settings;
 }
@@ -287,6 +293,30 @@ function renderSoundSettings(soundDisplay) {
   $("soundColor").value = color;
   $("soundSize").value = String(size);
   $("soundSizeValue").textContent = `${size}px`;
+}
+
+function applyGridAppearance(appearance) {
+  const root = document.documentElement;
+  root.style.setProperty("--grid-cell-bg", appearance?.cellBg || "#10131a");
+  root.style.setProperty("--grid-cell-border", appearance?.cellBorder || "#2a2f3a");
+  root.style.setProperty("--grid-number-color", appearance?.numberColor || "#a3a3a3");
+  root.style.setProperty("--grid-cell-radius", `${Number(appearance?.radius || 12)}px`);
+}
+
+function renderGridAppearance(appearance) {
+  const next = appearance || {
+    cellBg: "#10131a",
+    cellBorder: "#2a2f3a",
+    numberColor: "#a3a3a3",
+    radius: 12
+  };
+
+  $("gridCellBg").value = next.cellBg;
+  $("gridCellBorder").value = next.cellBorder;
+  $("gridNumberColor").value = next.numberColor;
+  $("gridRadius").value = String(Number(next.radius || 12));
+  $("gridRadiusValue").textContent = `${Number(next.radius || 12)}px`;
+  applyGridAppearance(next);
 }
 
 function fillActionTypeSelect() {
@@ -503,6 +533,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderGrid(zones.wheel.actions);
   renderBlockedSites(settings.blockedHosts);
   renderSoundSettings(settings.soundDisplay);
+  renderGridAppearance(settings.gridAppearance);
 
   $("enabled").addEventListener("change", async () => {
     const s = await getSettings();
@@ -523,12 +554,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("reset").addEventListener("click", async () => {
     const s = await getSettings();
     s.zones = { enabled: true, fullscreenOnly: false, wheel: { map: {}, actions: defaultZoneActions() } };
+    s.gridAppearance = {
+      cellBg: "#10131a",
+      cellBorder: "#2a2f3a",
+      numberColor: "#a3a3a3",
+      radius: 12
+    };
     await saveSettings(s);
     $("enabled").checked = true;
     $("fullscreenOnly").checked = false;
     renderGrid(s.zones.wheel.actions);
     renderBlockedSites(s.blockedHosts);
     renderSoundSettings(s.soundDisplay);
+    renderGridAppearance(s.gridAppearance);
   });
 
   $("soundColor").addEventListener("change", async () => {
@@ -549,6 +587,48 @@ document.addEventListener("DOMContentLoaded", async () => {
     s.soundDisplay.fontSize = Number($("soundSize").value);
     await saveSettings(s);
     renderSoundSettings(s.soundDisplay);
+  });
+
+  $("gridCellBg").addEventListener("change", async () => {
+    const s = await getSettings();
+    s.gridAppearance ||= {};
+    s.gridAppearance.cellBg = $("gridCellBg").value;
+    await saveSettings(s);
+    renderGridAppearance(s.gridAppearance);
+  });
+
+  $("gridCellBorder").addEventListener("change", async () => {
+    const s = await getSettings();
+    s.gridAppearance ||= {};
+    s.gridAppearance.cellBorder = $("gridCellBorder").value;
+    await saveSettings(s);
+    renderGridAppearance(s.gridAppearance);
+  });
+
+  $("gridNumberColor").addEventListener("change", async () => {
+    const s = await getSettings();
+    s.gridAppearance ||= {};
+    s.gridAppearance.numberColor = $("gridNumberColor").value;
+    await saveSettings(s);
+    renderGridAppearance(s.gridAppearance);
+  });
+
+  $("gridRadius").addEventListener("input", () => {
+    $("gridRadiusValue").textContent = `${$("gridRadius").value}px`;
+    applyGridAppearance({
+      cellBg: $("gridCellBg").value,
+      cellBorder: $("gridCellBorder").value,
+      numberColor: $("gridNumberColor").value,
+      radius: Number($("gridRadius").value)
+    });
+  });
+
+  $("gridRadius").addEventListener("change", async () => {
+    const s = await getSettings();
+    s.gridAppearance ||= {};
+    s.gridAppearance.radius = Number($("gridRadius").value);
+    await saveSettings(s);
+    renderGridAppearance(s.gridAppearance);
   });
 
   $("modalClose").addEventListener("click", closeZoneModal);

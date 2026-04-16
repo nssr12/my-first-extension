@@ -47,7 +47,21 @@
         </div>
 
         <section class="panel">
-          <div class="hint">قسم مخصص لتنسيق شكل صفحة الإعدادات لاحقًا مثل ألوان الشبكة أو شكل البطاقات.</div>
+          <div class="soundSettings">
+            <label>لون خلفية المربعات
+              <input id="gridCellBg" type="color" />
+            </label>
+            <label>لون حدود المربعات
+              <input id="gridCellBorder" type="color" />
+            </label>
+            <label>لون رقم المربع
+              <input id="gridNumberColor" type="color" />
+            </label>
+            <label>استدارة الزوايا
+              <input id="gridRadius" type="range" min="8" max="28" step="1" />
+              <span class="rangeValue" id="gridRadiusValue">12px</span>
+            </label>
+          </div>
         </section>
       </section>
 
